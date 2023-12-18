@@ -31,6 +31,23 @@ function getKey(node) {
     return node.y.toString() + '|' + node.x.toString();
 }
 
+function printArray() {
+    for (let y=0;y<grid.length;y++) {
+        let line = "";
+        for(let x=0;x<grid[y].length; x++) {
+            if (cameFrom[y + '|' + x] != undefined && finalSet.includes(cameFrom[y + '|' + x].node)) {
+                if (cameFrom[y + '|' + x].dir == directions.down) line += 'V';
+                else if (cameFrom[y + '|' + x].dir == directions.up) line += '^';
+                else if (cameFrom[y + '|' + x].dir == directions.right) line += '>';
+                else if (cameFrom[y + '|' + x].dir == directions.left) line += '<';
+            }
+            else line+='_';
+        }
+
+        console.log(line);
+    }
+}
+
 function reconstructPath(current) {
     let totalWeight = 0;
 
@@ -90,5 +107,7 @@ while (openSet.length > 0) {
 
     openSet = openSet.sort((a,b) => a.fScore - b.fScore);
 }
+
+printArray();
 
 console.log(total);
