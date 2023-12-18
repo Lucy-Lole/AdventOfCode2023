@@ -9,17 +9,20 @@ let cameFrom = {};
 let nodes = {};
 for (let y=0;y<grid.length;y++) {
     for(let x=0;x<grid[y].length; x++) {
-        nodes[y + '|' + x] = {y:y, x:x, weight:parseInt(grid[y][x]), gScore:99999999999999, fScore:99999999999999};
+        nodes[y + '|' + x + '|' + '0'] = {y:y, x:x, entry:directions.left, weight:parseInt(grid[y][x]), gScore:99999999999999, fScore:99999999999999};
+        nodes[y + '|' + x + '|' + '1'] = {y:y, x:x, entry:directions.up, weight:parseInt(grid[y][x]), gScore:99999999999999, fScore:99999999999999};
+        nodes[y + '|' + x + '|' + '2'] = {y:y, x:x, entry:directions.right, weight:parseInt(grid[y][x]), gScore:99999999999999, fScore:99999999999999};
+        nodes[y + '|' + x + '|' + '3'] = {y:y, x:x, entry:directions.down, weight:parseInt(grid[y][x]), gScore:99999999999999, fScore:99999999999999};
     }
 }
 
 // Construct our graph
 Object.values(nodes).forEach(node => {
     node.neighbors = [];
-    if (node.x > 0)           node.neighbors.push(nodes[node.y + '|' + (node.x-1)]);
-    if (node.x < horLength-1) node.neighbors.push(nodes[node.y + '|' + (node.x+1)]);
-    if (node.y > 0)           node.neighbors.push(nodes[(node.y-1) + '|' + node.x]);
-    if (node.y < verLength-1) node.neighbors.push(nodes[(node.y+1) + '|' + node.x]);
+    if (node.x > 0 && node.entry != directions.right) node.neighbors.push(nodes[node.y + '|' + (node.x-1) + '|' + directions.left]);
+    if (node.x < horLength-1 && node.entry != directions.left) node.neighbors.push(nodes[node.y + '|' + (node.x+1) + '|' + directions.right]);
+    if (node.y > 0&& node.entry != directions.down)           node.neighbors.push(nodes[(node.y-1) + '|' + node.x + '|' + directions.up]);
+    if (node.y < verLength-1&& node.entry != directions.up) node.neighbors.push(nodes[(node.y+1) + '|' + node.x + '|' + directions.down]);
 })
 
 // Set up for A*
@@ -28,20 +31,20 @@ function h(node) {
 }
 
 function getKey(node) {
-    return node.y.toString() + '|' + node.x.toString();
+    return node.y.toString() + '|' + node.x.toString() + '|' + node.entry.toString();
 }
 
 function printArray() {
     for (let y=0;y<grid.length;y++) {
         let line = "";
         for(let x=0;x<grid[y].length; x++) {
-            if (cameFrom[y + '|' + x] != undefined && finalSet.includes(cameFrom[y + '|' + x].node)) {
+            if (cameFrom[y + '|' + x] != undefined && finalSet.includes(nodes[y + '|' + x])) {
                 if (cameFrom[y + '|' + x].dir == directions.down) line += 'V';
                 else if (cameFrom[y + '|' + x].dir == directions.up) line += '^';
                 else if (cameFrom[y + '|' + x].dir == directions.right) line += '>';
                 else if (cameFrom[y + '|' + x].dir == directions.left) line += '<';
             }
-            else line+='_';
+            else line+='.';
         }
 
         console.log(line);
@@ -63,8 +66,8 @@ function reconstructPath(current) {
     return totalWeight;
 }
 
-let start = nodes["0|0"];
-let end = nodes[(verLength-1) + '|' + (horLength-1)];
+let start = nodes["0|0|2"];
+let end = nodes[(verLength-1) + '|' + (horLength-1) + '|2'];
 
 start.gScore = 0;
 start.fscore = h(start);
@@ -85,19 +88,15 @@ while (openSet.length > 0) {
     current.neighbors.forEach(neighbor => {
         let tentGScore = (current.gScore + neighbor.weight);
         if (tentGScore < neighbor.gScore) {
-            let tmpDir;
-            let tmpStep = 1;
+            let tmpStep = 0;
 
-            if (neighbor.x > current.x) tmpDir = directions.right;
-            else if (neighbor.x < current.x) tmpDir = directions.left;
-            else if (neighbor.y > current.y) tmpDir = directions.down;
-            else if (neighbor.y < current.y) tmpDir = directions.up;
+            if (cameFrom[getKey(current)] != undefined && cameFrom[getKey(current)].node.dir == current.dir) tmpStep = cameFrom[getKey(current)].step;
 
-            if (cameFrom[getKey(current)] != undefined && cameFrom[getKey(current)].dir == tmpDir) tmpStep = (cameFrom[getKey(current)].step + 1);
+            if (current.entry == neighbor.entry) tmpStep++;
 
             if (tmpStep > 3) return;
 
-            cameFrom[getKey(neighbor)] = {node:current,dir:tmpDir,step:tmpStep};
+            cameFrom[getKey(neighbor)] = {node:current,step:tmpStep};
             neighbor.gScore = tentGScore;
             neighbor.fScore = tentGScore + h(neighbor);
             if (openSet.find(x => x == neighbor) == undefined) openSet.push(neighbor);
@@ -107,7 +106,5 @@ while (openSet.length > 0) {
 
     openSet = openSet.sort((a,b) => a.fScore - b.fScore);
 }
-
-printArray();
 
 console.log(total);
