@@ -1,5 +1,5 @@
 "use strict";
 let fs = require('fs');
-let lines = fs.readFileSync("./Inputs/input19.txt").toString().split('\n');
+let lines = fs.readFileSync("./Inputs/input20.txt").toString().split('\n');
 
 console.log();
